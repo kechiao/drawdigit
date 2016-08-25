@@ -4,6 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
+from sklearn.externals import joblib #This module helps with offlining classifier
+from sklearn import cross_validation #This module helps with generalization of our classifier
+from sklearn.grid_search import GridSearchCV #This module uses grid search to cross validate classifier
 
 #Importing data
 #Name:    loadData(location)
@@ -25,18 +28,25 @@ def loadData(location):
  else:
   return data
 
-def knn(train, labels, test):
- knn = KNeighborsClassifier()
- knn.fit(train, labels)
- predictions = knn.predict(test)
- return predictions
-
-def svm(train, labels, test):
- svm_poly = SVC(kernel='poly', degree=4)
- #svm_poly = svm.SVC(kernel='poly', degree=4)
- svm_poly.fit(train, labels)
- predictions = svm_poly.predict(test)
- return predictions
+def train_svm(train, labels):
+ #Using exhaustive grid search to find best hyperparameter combination
+ tuning_params = [
+                  {'kernel': ['rbf'], 'gamma': [1e-3, 1e-2, 1e-1], 'C': [0.1, 1.0, 10.0]},
+                  {'kernel': ['poly'], 'degree': [3, 4], 'C': [0.1, 1.0, 10.0]}
+                 ]
+ print 'Tuning hyperparameters for accuracy (%) ... \n'
+ #Using support vector classifier
+ svm = SVC()
+ model = GridSearchCV(svm, tuning_params, cv=3)
+ model.fit(train, labels)
+ print 'Best parameters found: \n'
+ print (model.best_params_)
+ print 'Highest accuracy of grid search: \n'
+ print (model.best_score_)
+ print 'Summary of grid search: \n'
+ print (model.grid_scores_)
+ #Final trained model
+ return model
 
 def main():
  trainLoc = 'data/train.csv'
@@ -45,17 +55,11 @@ def main():
  labels, trainingData = loadData(trainLoc)
  testingData = loadData(testLoc)
 
- classifier = raw_input('Which classifier would you like to use? \n 1: K-NN \n 2: SVM \n Your selection: ')
+ classifier = raw_input('Would you like to train (1) or test (2)?: ')
  if int(classifier) == 1:
-  print 'Training and classifying using K Nearest Neighbors'
-  predictions = knn(trainingData, labels, testingData)
-  np.savetxt('predictions_knn.csv', predictions, delimiter=',')
-  print 'Done!'
-
- elif int(classifier) == 2:
-  print 'Training and classifying using SVM with polynomial Kernel'
-  predictions = svm(trainingData, labels, testingData)
-  np.savetxt('predictions_svm.csv', predictions, delimiter=',')
+  print 'Training using SVM'
+  model = train_svm(trainingData, labels)
+  joblib.dump(model, 'svm_digit.pkl')
   print 'Done!'
 
 if __name__ == '__main__':

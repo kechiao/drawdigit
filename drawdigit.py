@@ -20,6 +20,7 @@ def loadData(location):
  data = df.values
  #Extracting labels from the first column of the training data.
  if 'train' in location:
+  #data = data[0:5000,:]
   labels = data[:,0]
   size = data.shape[1]
   #Removing labels because we don't want to use our answers as one of the features!
@@ -31,13 +32,12 @@ def loadData(location):
 def train_svm(train, labels):
  #Using exhaustive grid search to find best hyperparameter combination
  tuning_params = [
-                  {'kernel': ['rbf'], 'gamma': [1e-3, 1e-2, 1e-1], 'C': [0.1, 1.0, 10.0]},
-                  {'kernel': ['poly'], 'degree': [3, 4], 'C': [0.1, 1.0, 10.0]}
+                  {'kernel': ['rbf'], 'gamma': [1e-2, 1e-1], 'C': [0.1, 1.0]},
+                  {'kernel': ['poly'], 'degree': [3, 4], 'C': [0.1, 1.0]}
                  ]
  print 'Tuning hyperparameters for accuracy (%) ... \n'
  #Using support vector classifier
- svm = SVC()
- model = GridSearchCV(svm, tuning_params, cv=3)
+ model = GridSearchCV(SVC(C=0.1), tuning_params, cv=3)
  model.fit(train, labels)
  print 'Best parameters found: \n'
  print (model.best_params_)
@@ -62,5 +62,6 @@ def main():
   joblib.dump(model, 'svm_digit.pkl')
   print 'Done!'
 
+#Standard boilerplate check when program is called from command line
 if __name__ == '__main__':
  main()

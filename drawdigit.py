@@ -1,4 +1,4 @@
-
+import csv
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,7 +20,8 @@ def loadData(location):
  data = df.values
  #Extracting labels from the first column of the training data.
  if 'train' in location:
-  #data = data[0:5000,:]
+  #truncated part of the set to test if code was working
+  #data = data[0:5000,:] 
   labels = data[:,0]
   size = data.shape[1]
   #Removing labels because we don't want to use our answers as one of the features!
@@ -46,6 +47,8 @@ def train_svm(train, labels):
  print 'Summary of grid search: \n'
  print (model.grid_scores_)
  #Final trained model
+ #After cross validating the exhaustive grid search, the best set of parameters are:
+ #kernel: polynomial; degree: 3; C: 0.1
  return model
 
 def main():
@@ -61,6 +64,17 @@ def main():
   model = train_svm(trainingData, labels)
   joblib.dump(model, 'svm_digit.pkl')
   print 'Done!'
+
+ elif int(classifier) == 2:
+  print 'Testing...'
+  model = joblib.load('svm_digit.pkl')
+  predictions = model.predict(testingData)
+  
+  output = open('predictions.csv', 'w')
+  output.write('ImageId,label\n')
+  for imageid in range(len(predictions)):
+   output.write(str(imageid + 1) + ',' + str(int(predictions[imageid])) + '\n')
+  output.close()
 
 #Standard boilerplate check when program is called from command line
 if __name__ == '__main__':
